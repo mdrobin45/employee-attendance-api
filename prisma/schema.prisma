@@ -1,0 +1,36 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Employee {
+  id         Int        @id @default(autoincrement())
+  name       String
+  email      String     @unique
+  password   String
+  department String
+  ClockLog   ClockLog[]
+  Records    Record[]
+}
+
+model ClockLog {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  type       String
+  timestamp  DateTime @default(now())
+  Employee   Employee @relation(fields: [employeeId], references: [id])
+}
+
+model Record {
+  id         Int      @id @default(autoincrement())
+  employeeId Int
+  date       DateTime
+  clockIn    String
+  clockOut   String
+  totalHours Int
+  Employee   Employee @relation(fields: [employeeId], references: [id])
+}
