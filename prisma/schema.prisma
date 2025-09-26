@@ -42,7 +42,7 @@ model attendance_records{
    date DateTime
    check_in DateTime
    check_out DateTime
-   work_hours Int
+   work_hours Int? @default(0)
    status attendance_status
    remarks String?
    employee employees @relation(fields: [employee_id], references: [id])
