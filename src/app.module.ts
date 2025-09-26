@@ -5,12 +5,14 @@ import { AppService } from './app.service';
 import { AuthModule } from './auth/auth.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { PrismaService } from './prisma/prisma.service';
+import { DepartmentsModule } from './departments/departments.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot(),
     AuthModule,
     PrismaModule,
+    DepartmentsModule,
   ],
   providers: [PrismaService, AppService],
   controllers: [AppController],
