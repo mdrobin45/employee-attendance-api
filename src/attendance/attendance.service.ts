@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { Cron, CronExpression } from '@nestjs/schedule';
 import { attendance_status } from '@prisma/client';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateAttendanceDto } from './dto/create-attendance.dto';
@@ -46,6 +47,17 @@ export class AttendanceService {
       where: {
         date: date,
         status: attendance_status.late,
+      },
+    });
+  }
+
+  // Cron job to update attendance status (present, absent)
+  @Cron(CronExpression.EVERY_DAY_AT_4AM)
+  async updateAttendanceStatus() {
+    const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
+    const attendance = await this.prisma.attendance_records.findMany({
+      where: {
+        date: yesterday,
       },
     });
   }
