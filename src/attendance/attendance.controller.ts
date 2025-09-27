@@ -33,4 +33,9 @@ export class AttendanceController {
   getLateComers(@Query('date') date: string) {
     return this.attendanceService.getLateComers(date);
   }
+
+  @Post('update-status')
+  updateAttendanceStatus() {
+    return this.attendanceService.updateAttendanceStatus();
+  }
 }
