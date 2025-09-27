@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { AttendanceDataParser } from './attendance-data-parser';
 import { AttendanceRecordHandler } from './attendance-record-handler';
+import { ShiftTimeCalculate } from './shift-time-calculate';
 import { WorkDateCalculator } from './work-date-calculator';
 
 @Injectable()
@@ -9,6 +10,7 @@ export class AttendanceProcessor {
     private readonly dataParser: AttendanceDataParser,
     private readonly dateCalculator: WorkDateCalculator,
     private readonly recordHandler: AttendanceRecordHandler,
+    private readonly shiftTimeCalculate: ShiftTimeCalculate,
   ) {}
 
   async processAttendanceRecord(record: {
@@ -31,10 +33,15 @@ export class AttendanceProcessor {
       if (!employee) {
         return;
       }
+      const shiftTime =
+        await this.shiftTimeCalculate.calculateShiftTime(employeeCode);
+      if (!shiftTime?.shift_start || !shiftTime?.shift_end) {
+        return;
+      }
 
       await this.recordHandler.createNewRecord(
         employeeCode,
-        employee.id,
+        shiftTime.shift_start,
         timeOnly,
         dateString,
       );
@@ -42,6 +49,7 @@ export class AttendanceProcessor {
       if (existingRecord.check_in && !existingRecord.check_out) {
         await this.recordHandler.updateCheckoutTime(
           existingRecord.id,
+
           timeOnly,
         );
       } else if (existingRecord.check_in && existingRecord.check_out) {

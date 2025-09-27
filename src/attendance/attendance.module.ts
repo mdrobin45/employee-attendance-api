@@ -9,6 +9,7 @@ import {
   AttendanceRecordHandler,
   WorkDateCalculator,
 } from './handlers';
+import { ShiftTimeCalculate } from './handlers/shift-time-calculate';
 
 @Module({
   imports: [ScheduleModule.forRoot()],
@@ -19,6 +20,7 @@ import {
     WorkDateCalculator,
     AttendanceRecordHandler,
     AttendanceProcessor,
+    ShiftTimeCalculate,
     PrismaService,
   ],
 })
