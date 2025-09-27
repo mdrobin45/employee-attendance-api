@@ -30,7 +30,7 @@ model employees{
    id String @id @default(uuid())
    department_id String
    name String
-   employee_code Int
+   employee_code String @unique
    designation String
    department departments @relation(fields: [department_id], references: [id])
    attendance_records attendance_records[]
@@ -41,9 +41,9 @@ model attendance_records{
    employee_id String
    date DateTime
    check_in DateTime
-   check_out DateTime
+   check_out DateTime?
    work_hours Int? @default(0)
-   status attendance_status
+   status attendance_status?
    remarks String?
    employee employees @relation(fields: [employee_id], references: [id])
 }

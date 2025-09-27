@@ -1,14 +1,13 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
-import { CreateAttendanceDto } from './dto/create-attendance.dto';
 
 @Controller('attendance')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
   @Post()
-  create(@Body() attendanceData: CreateAttendanceDto) {
-    return this.attendanceService.create(attendanceData);
+  create(@Body() payload: string) {
+    return this.attendanceService.create(payload);
   }
 
   @Get('records')
