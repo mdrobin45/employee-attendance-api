@@ -48,19 +48,20 @@ export class AttendanceService {
    * Calculate work date based on punch time
    */
   private calculateWorkDate(timestamp: string) {
-    const recordTime = new Date(timestamp);
+    // Ensure the timestamp is treated as UTC to avoid timezone conversion issues
+    const recordTime = new Date(timestamp + 'Z'); // Add 'Z' to indicate UTC
     const workDate = new Date(recordTime);
 
     // If time is before 4 AM, it belongs to previous day
-    if (recordTime.getHours() < 4) {
-      workDate.setDate(recordTime.getDate() - 1);
+    if (recordTime.getUTCHours() < 4) {
+      workDate.setUTCDate(recordTime.getUTCDate() - 1);
     }
 
-    // Normalize to start of work day (4 AM)
+    // Normalize to start of work day (4 AM UTC)
     const recordDate = new Date(
-      workDate.getFullYear(),
-      workDate.getMonth(),
-      workDate.getDate(),
+      workDate.getUTCFullYear(),
+      workDate.getUTCMonth(),
+      workDate.getUTCDate(),
     );
 
     return { recordTime, workDate, recordDate };
