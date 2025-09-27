@@ -57,11 +57,15 @@ export class AttendanceService {
       workDate.setDate(recordTime.getDate() - 1);
     }
 
-    // Normalize to start of work day (4 AM)
+    // Normalize to date only (no time component) - set to start of day
     const recordDate = new Date(
       workDate.getFullYear(),
       workDate.getMonth(),
       workDate.getDate(),
+      0,
+      0,
+      0,
+      0, // Explicitly set hours, minutes, seconds, milliseconds to 0
     );
 
     // Extract time-only string directly from the original timestamp (HH:MM:SS format)
