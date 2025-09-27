@@ -11,26 +11,26 @@ export class AttendanceController {
   }
 
   @Get('records')
-  getDailyRecords(@Query('date') date: Date) {
+  getDailyRecords(@Query('date') date: string) {
     return this.attendanceService.getDailyAttendance(date);
   }
 
   @Get('records/:employee_id')
   getEmployeeRecords(
     @Param('employee_id') employee_id: string,
-    @Query('from') from: Date,
-    @Query('to') to: Date,
+    @Query('from') from: string,
+    @Query('to') to: string,
   ) {
     return this.attendanceService.getEmployeeRecords(employee_id, from, to);
   }
 
   @Get('absentees')
-  getAbsentees(@Query('date') date: Date) {
+  getAbsentees(@Query('date') date: string) {
     return this.attendanceService.getAbsentees(date);
   }
 
   @Get('latecomers')
-  getLateComers(@Query('date') date: Date) {
+  getLateComers(@Query('date') date: string) {
     return this.attendanceService.getLateComers(date);
   }
 }

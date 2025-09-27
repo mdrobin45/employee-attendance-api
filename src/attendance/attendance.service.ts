@@ -52,26 +52,33 @@ export class AttendanceService {
     const recordTime = new Date(timestamp);
     const workDate = new Date(recordTime);
 
-    // If time is before 4 AM, it belongs to previous day
-    if (recordTime.getHours() < 4) {
+    // If time is 4 AM or before, it belongs to previous day
+    // Note: 4:00 AM and before belongs to previous day, after 4:00 AM belongs to current day
+    if (recordTime.getHours() <= 4) {
       workDate.setDate(recordTime.getDate() - 1);
     }
 
-    // Normalize to date only (no time component) - set to start of day
+    // Create date string directly from workDate to avoid timezone conversion issues
+    const year = workDate.getFullYear();
+    const month = String(workDate.getMonth() + 1).padStart(2, '0');
+    const day = String(workDate.getDate()).padStart(2, '0');
+    const dateString = `${year}-${month}-${day}`;
+
+    // Create a proper Date object for the date (at midnight local time)
     const recordDate = new Date(
-      workDate.getFullYear(),
+      year,
       workDate.getMonth(),
       workDate.getDate(),
       0,
       0,
       0,
-      0, // Explicitly set hours, minutes, seconds, milliseconds to 0
+      0,
     );
 
     // Extract time-only string directly from the original timestamp (HH:MM:SS format)
     const timeOnly = recordTime.toTimeString().split(' ')[0]; // Gets HH:MM:SS
 
-    return { recordTime, workDate, recordDate, timeOnly };
+    return { recordTime, workDate, recordDate, timeOnly, dateString };
   }
 
   /**
@@ -93,7 +100,7 @@ export class AttendanceService {
   /**
    * Get existing attendance record for employee on specific date
    */
-  private async getExistingRecord(employeeCode: string, recordDate: Date) {
+  private async getExistingRecord(employeeCode: string, dateString: string) {
     try {
       const employee = await this.getEmployee(employeeCode);
       if (!employee) {
@@ -103,7 +110,7 @@ export class AttendanceService {
       return await this.prisma.attendance_records.findFirst({
         where: {
           employee_id: employee.id,
-          date: recordDate,
+          date: dateString,
         },
       });
     } catch (error) {
@@ -121,7 +128,7 @@ export class AttendanceService {
   private async createNewRecord(
     employeeCode: string,
     timeOnly: string,
-    recordDate: Date,
+    dateString: string,
   ): Promise<void> {
     try {
       const employee = await this.getEmployee(employeeCode);
@@ -134,7 +141,7 @@ export class AttendanceService {
           employee_id: employee.id,
           check_in: timeOnly,
           check_out: null,
-          date: recordDate,
+          date: dateString,
         },
       });
       console.log(
@@ -203,16 +210,16 @@ export class AttendanceService {
     fields: string[];
   }): Promise<void> {
     const { employeeCode, timestamp } = record;
-    const { recordDate, timeOnly } = this.calculateWorkDate(timestamp);
+    const { dateString, timeOnly } = this.calculateWorkDate(timestamp);
 
-    // Check for existing record
+    // Check for existing record for this work date
     const existingRecord = await this.getExistingRecord(
       employeeCode,
-      recordDate,
+      dateString,
     );
 
     if (!existingRecord) {
-      // First punch of the day = Check-in
+      // No existing record for this work date = Check-in
       const employee = await this.getEmployee(employeeCode);
 
       if (!employee) {
@@ -222,16 +229,19 @@ export class AttendanceService {
         return;
       }
 
-      await this.createNewRecord(employeeCode, timeOnly, recordDate);
-    } else if (existingRecord.check_in && !existingRecord.check_out) {
-      // Second punch = Check-out
-      await this.updateCheckoutTime(existingRecord.id, timeOnly);
-    } else if (existingRecord.check_in && existingRecord.check_out) {
-      // Third+ punch = Update check-out time
-      await this.updateCheckoutTime(existingRecord.id, timeOnly);
+      await this.createNewRecord(employeeCode, timeOnly, dateString);
     } else {
-      // Edge case: record exists but no check-in time
-      await this.updateCheckinTime(existingRecord.id, timeOnly);
+      // Record exists for this work date
+      if (existingRecord.check_in && !existingRecord.check_out) {
+        // Has check-in but no check-out = Check-out
+        await this.updateCheckoutTime(existingRecord.id, timeOnly);
+      } else if (existingRecord.check_in && existingRecord.check_out) {
+        // Has both check-in and check-out = Update check-out time
+        await this.updateCheckoutTime(existingRecord.id, timeOnly);
+      } else {
+        // Edge case: record exists but no check-in time = Update check-in
+        await this.updateCheckinTime(existingRecord.id, timeOnly);
+      }
     }
   }
 
@@ -280,7 +290,7 @@ export class AttendanceService {
     };
   }
 
-  async getDailyAttendance(date: Date) {
+  async getDailyAttendance(date: string) {
     return await this.prisma.attendance_records.findMany({
       where: {
         date: date,
@@ -288,7 +298,7 @@ export class AttendanceService {
     });
   }
 
-  async getEmployeeRecords(employee_id: string, from: Date, to: Date) {
+  async getEmployeeRecords(employee_id: string, from: string, to: string) {
     return await this.prisma.attendance_records.findMany({
       where: {
         employee_id: employee_id,
@@ -300,7 +310,7 @@ export class AttendanceService {
     });
   }
 
-  async getAbsentees(date: Date) {
+  async getAbsentees(date: string) {
     return await this.prisma.attendance_records.findMany({
       where: {
         date: date,
@@ -309,7 +319,7 @@ export class AttendanceService {
     });
   }
 
-  async getLateComers(date: Date) {
+  async getLateComers(date: string) {
     return await this.prisma.attendance_records.findMany({
       where: {
         date: date,
@@ -322,14 +332,16 @@ export class AttendanceService {
   @Cron(CronExpression.EVERY_DAY_AT_4AM)
   async updateAttendanceStatus() {
     const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
+    const yesterdayString = yesterday.toISOString().split('T')[0];
+
     const attendanceRecords = await this.prisma.attendance_records.findMany({
       where: {
-        date: yesterday,
+        date: yesterdayString,
       },
     });
 
     this.logger.log(
-      `Found ${attendanceRecords.length} attendance records for ${yesterday.toDateString()}`,
+      `Found ${attendanceRecords.length} attendance records for ${yesterdayString}`,
     );
     // TODO: Implement status update logic based on business rules
   }
