@@ -28,6 +28,10 @@ export class AttendanceRecordHandler {
     });
   }
 
+  private toDate(time: string): Date {
+    return new Date(`1970-01-01T${time}Z`);
+  }
+
   async createNewRecord(
     employeeCode: string,
     shift_start: Date,
@@ -39,10 +43,7 @@ export class AttendanceRecordHandler {
       throw new Error(`Employee with ID ${employeeCode} not found`);
     }
 
-    function toDate(time: string): Date {
-      return new Date(`1970-01-01T${time}Z`);
-    }
-    const checkInDate = toDate(timeOnly);
+    const checkInDate = this.toDate(timeOnly);
     const isLate = checkInDate > shift_start;
 
     await this.prisma.attendance_records.create({
@@ -58,21 +59,47 @@ export class AttendanceRecordHandler {
 
   async updateCheckoutTime(
     recordId: string,
+    shift_end: Date,
     checkoutTime: string,
   ): Promise<void> {
+    const checkOutDate = this.toDate(checkoutTime);
+    const isEarlyExit = checkOutDate < shift_end;
+
+    // Get current status
+    const existingRecord = await this.prisma.attendance_records.findUnique({
+      where: { id: recordId },
+    });
+
     await this.prisma.attendance_records.update({
       where: { id: recordId },
-      data: { check_out: checkoutTime },
+      data: {
+        check_out: checkoutTime,
+        status: isEarlyExit
+          ? attendance_status.early_exit
+          : existingRecord?.status,
+      },
     });
   }
 
   async updateCheckinTime(
     recordId: string,
+    shift_start: Date,
     checkinTime: string,
   ): Promise<void> {
+    const checkInDate = this.toDate(checkinTime);
+    const isLate = checkInDate > shift_start;
+
+    // Get current status
+    const existingRecord = await this.prisma.attendance_records.findUnique({
+      where: { id: recordId },
+    });
+
     await this.prisma.attendance_records.update({
       where: { id: recordId },
-      data: { check_in: checkinTime },
+      data: {
+        check_in: checkinTime,
+        status: isLate ? attendance_status.late : existingRecord?.status,
+      },
     });
   }
 }

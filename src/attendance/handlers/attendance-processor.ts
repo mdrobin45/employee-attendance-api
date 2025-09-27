@@ -27,15 +27,16 @@ export class AttendanceProcessor {
       dateString,
     );
 
+    const shiftTime =
+      await this.shiftTimeCalculate.calculateShiftTime(employeeCode);
+    if (!shiftTime?.shift_start || !shiftTime?.shift_end) {
+      return;
+    }
+
     if (!existingRecord) {
       const employee = await this.recordHandler.getEmployee(employeeCode);
 
       if (!employee) {
-        return;
-      }
-      const shiftTime =
-        await this.shiftTimeCalculate.calculateShiftTime(employeeCode);
-      if (!shiftTime?.shift_start || !shiftTime?.shift_end) {
         return;
       }
 
@@ -49,16 +50,21 @@ export class AttendanceProcessor {
       if (existingRecord.check_in && !existingRecord.check_out) {
         await this.recordHandler.updateCheckoutTime(
           existingRecord.id,
-
+          shiftTime.shift_end,
           timeOnly,
         );
       } else if (existingRecord.check_in && existingRecord.check_out) {
         await this.recordHandler.updateCheckoutTime(
           existingRecord.id,
+          shiftTime.shift_end,
           timeOnly,
         );
       } else {
-        await this.recordHandler.updateCheckinTime(existingRecord.id, timeOnly);
+        await this.recordHandler.updateCheckinTime(
+          existingRecord.id,
+          shiftTime.shift_start,
+          timeOnly,
+        );
       }
     }
   }
