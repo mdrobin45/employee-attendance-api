@@ -34,6 +34,7 @@ export class AttendanceProcessor {
 
       await this.recordHandler.createNewRecord(
         employeeCode,
+        employee.id,
         timeOnly,
         dateString,
       );

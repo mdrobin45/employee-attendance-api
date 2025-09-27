@@ -1,4 +1,4 @@
-import { IsDate, IsNotEmpty, IsString } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateDepartmentDto {
   @IsString()
@@ -9,11 +9,11 @@ export class CreateDepartmentDto {
   @IsNotEmpty()
   description: string;
 
-  @IsDate()
+  @IsString()
   @IsNotEmpty()
-  shift_start: Date;
+  shift_start: string;
 
-  @IsDate()
+  @IsString()
   @IsNotEmpty()
-  shift_end: Date;
+  shift_end: string;
 }

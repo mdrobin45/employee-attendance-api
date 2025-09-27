@@ -16,8 +16,8 @@ async function main() {
         data: {
           name,
           description: `${name} Department`,
-          shift_start: new Date('2025-09-27T09:00:00Z'),
-          shift_end: new Date('2025-09-27T17:00:00Z'),
+          shift_start: '13:30:00',
+          shift_end: '23:00:00',
         },
       }),
     ),

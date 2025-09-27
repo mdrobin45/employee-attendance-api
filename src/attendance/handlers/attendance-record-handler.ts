@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { attendance_status } from '@prisma/client';
 import { PrismaService } from '../../prisma/prisma.service';
 
 @Injectable()
@@ -29,6 +30,7 @@ export class AttendanceRecordHandler {
 
   async createNewRecord(
     employeeCode: string,
+    employeeId: string,
     timeOnly: string,
     dateString: string,
   ): Promise<void> {
@@ -36,6 +38,27 @@ export class AttendanceRecordHandler {
     if (!employee) {
       throw new Error(`Employee with ID ${employeeCode} not found`);
     }
+    // Get employee along with department info by joining employee and department
+    const employeeWithDepartment = await this.prisma.employees.findUnique({
+      where: {
+        employee_code: employeeCode,
+      },
+      include: {
+        department: true,
+      },
+    });
+
+    if (!employeeWithDepartment?.department) return;
+    const shiftStart = employeeWithDepartment?.department.shift_start;
+
+    function toDate(time: string): Date {
+      return new Date(`1970-01-01T${time}Z`);
+    }
+
+    const shiftDate = toDate(shiftStart);
+    const checkInDate = toDate(timeOnly);
+    const isLate = checkInDate > shiftDate;
+    console.log('Is Late', isLate);
 
     await this.prisma.attendance_records.create({
       data: {
@@ -43,6 +66,7 @@ export class AttendanceRecordHandler {
         check_in: timeOnly,
         check_out: null,
         date: dateString,
+        status: isLate ? attendance_status.late : attendance_status.present,
       },
     });
   }

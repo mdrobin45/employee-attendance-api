@@ -21,8 +21,8 @@ model departments{
    id String @id @default(uuid())
    name String
    description String
-   shift_start DateTime
-   shift_end DateTime
+   shift_start String
+   shift_end String
    employees employees[]
 }
 
