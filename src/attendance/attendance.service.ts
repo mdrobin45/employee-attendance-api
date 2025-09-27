@@ -71,7 +71,6 @@ export class AttendanceService {
     const yesterday = new Date(new Date().setDate(new Date().getDate() - 1));
     const yesterdayString = yesterday.toISOString().split('T')[0];
 
-    // Get all employees
     const allEmployees = await this.prisma.employees.findMany({
       select: { id: true, employee_code: true, name: true },
     });
@@ -81,7 +80,6 @@ export class AttendanceService {
     let skippedCount = 0;
 
     for (const employee of allEmployees) {
-      // Check if employee has an attendance record for yesterday
       const existingRecord = await this.prisma.attendance_records.findFirst({
         where: {
           employee_id: employee.id,
@@ -90,7 +88,6 @@ export class AttendanceService {
       });
 
       if (!existingRecord) {
-        // No record exists - create new record with 'absent' status
         await this.prisma.attendance_records.create({
           data: {
             employee_id: employee.id,
@@ -105,19 +102,16 @@ export class AttendanceService {
 
         createdCount++;
       } else {
-        // Record exists - check if we need to update status
         if (existingRecord.status === attendance_status.leave) {
           skippedCount++;
           continue;
         }
 
-        // Only process records with null status
         if (existingRecord.status === null) {
           if (
             !existingRecord.check_in ||
             existingRecord.check_in.trim() === ''
           ) {
-            // No check-in - update to absent
             await this.prisma.attendance_records.update({
               where: { id: existingRecord.id },
               data: { status: attendance_status.absent },
@@ -125,7 +119,6 @@ export class AttendanceService {
 
             updatedCount++;
           } else {
-            // Has check-in - update to present
             await this.prisma.attendance_records.update({
               where: { id: existingRecord.id },
               data: { status: attendance_status.present },
