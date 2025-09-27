@@ -45,26 +45,29 @@ export class AttendanceService {
   }
 
   /**
-   * Calculate work date based on punch time
+   * Calculate work date based on punch time and extract time-only values
    */
   private calculateWorkDate(timestamp: string) {
-    // Ensure the timestamp is treated as UTC to avoid timezone conversion issues
-    const recordTime = new Date(timestamp + 'Z'); // Add 'Z' to indicate UTC
+    // Parse the timestamp as local time (no timezone conversion)
+    const recordTime = new Date(timestamp);
     const workDate = new Date(recordTime);
 
     // If time is before 4 AM, it belongs to previous day
-    if (recordTime.getUTCHours() < 4) {
-      workDate.setUTCDate(recordTime.getUTCDate() - 1);
+    if (recordTime.getHours() < 4) {
+      workDate.setDate(recordTime.getDate() - 1);
     }
 
-    // Normalize to start of work day (4 AM UTC)
+    // Normalize to start of work day (4 AM)
     const recordDate = new Date(
-      workDate.getUTCFullYear(),
-      workDate.getUTCMonth(),
-      workDate.getUTCDate(),
+      workDate.getFullYear(),
+      workDate.getMonth(),
+      workDate.getDate(),
     );
 
-    return { recordTime, workDate, recordDate };
+    // Extract time-only string directly from the original timestamp (HH:MM:SS format)
+    const timeOnly = recordTime.toTimeString().split(' ')[0]; // Gets HH:MM:SS
+
+    return { recordTime, workDate, recordDate, timeOnly };
   }
 
   /**
@@ -113,7 +116,7 @@ export class AttendanceService {
    */
   private async createNewRecord(
     employeeCode: string,
-    recordTime: Date,
+    timeOnly: string,
     recordDate: Date,
   ): Promise<void> {
     try {
@@ -125,7 +128,7 @@ export class AttendanceService {
       const newRecord = await this.prisma.attendance_records.create({
         data: {
           employee_id: employee.id,
-          check_in: recordTime,
+          check_in: timeOnly,
           check_out: null,
           date: recordDate,
         },
@@ -148,7 +151,7 @@ export class AttendanceService {
    */
   private async updateCheckoutTime(
     recordId: string,
-    checkoutTime: Date,
+    checkoutTime: string,
   ): Promise<void> {
     try {
       await this.prisma.attendance_records.update({
@@ -170,7 +173,7 @@ export class AttendanceService {
    */
   private async updateCheckinTime(
     recordId: string,
-    checkinTime: Date,
+    checkinTime: string,
   ): Promise<void> {
     try {
       await this.prisma.attendance_records.update({
@@ -196,7 +199,7 @@ export class AttendanceService {
     fields: string[];
   }): Promise<void> {
     const { employeeCode, timestamp } = record;
-    const { recordTime, recordDate } = this.calculateWorkDate(timestamp);
+    const { recordDate, timeOnly } = this.calculateWorkDate(timestamp);
 
     // Check for existing record
     const existingRecord = await this.getExistingRecord(
@@ -215,16 +218,16 @@ export class AttendanceService {
         return;
       }
 
-      await this.createNewRecord(employeeCode, recordTime, recordDate);
+      await this.createNewRecord(employeeCode, timeOnly, recordDate);
     } else if (existingRecord.check_in && !existingRecord.check_out) {
       // Second punch = Check-out
-      await this.updateCheckoutTime(existingRecord.id, recordTime);
+      await this.updateCheckoutTime(existingRecord.id, timeOnly);
     } else if (existingRecord.check_in && existingRecord.check_out) {
       // Third+ punch = Update check-out time
-      await this.updateCheckoutTime(existingRecord.id, recordTime);
+      await this.updateCheckoutTime(existingRecord.id, timeOnly);
     } else {
       // Edge case: record exists but no check-in time
-      await this.updateCheckinTime(existingRecord.id, recordTime);
+      await this.updateCheckinTime(existingRecord.id, timeOnly);
     }
   }
 

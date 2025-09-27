@@ -40,8 +40,8 @@ model attendance_records{
    id String @id @default(uuid())
    employee_id String
    date DateTime
-   check_in DateTime
-   check_out DateTime?
+   check_in String
+   check_out String?
    work_hours Int? @default(0)
    status attendance_status?
    remarks String?
