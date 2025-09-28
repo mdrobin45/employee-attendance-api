@@ -69,27 +69,19 @@ export class AttendanceProcessor {
     }
   }
 
-  async processAttendance(
-    data: string,
-  ): Promise<{ message: string; processed: number }> {
+  async processAttendance(data: string): Promise<string> {
     const attendanceRecords = this.dataParser.parseAttendanceData(data);
-
-    let processedCount = 0;
-    const errors: string[] = [];
 
     for (const record of attendanceRecords) {
       try {
         await this.processAttendanceRecord(record);
-        processedCount++;
-      } catch (error) {
-        const errorMessage = `Error processing record for employee ${record.employeeCode}: ${error.message}`;
-        errors.push(errorMessage);
+      } catch {
+        console.log(
+          `Error processing record for employee ${record.employeeCode}`,
+        );
       }
     }
 
-    return {
-      message: `Successfully processed ${processedCount}/${attendanceRecords.length} records`,
-      processed: processedCount,
-    };
+    return 'OK';
   }
 }

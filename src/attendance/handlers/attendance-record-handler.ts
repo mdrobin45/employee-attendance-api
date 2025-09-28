@@ -17,7 +17,8 @@ export class AttendanceRecordHandler {
   async getExistingRecord(employeeCode: string, dateString: string) {
     const employee = await this.getEmployee(employeeCode);
     if (!employee) {
-      throw new Error(`Employee with ID ${employeeCode} not found`);
+      console.log(`Employee with ID ${employeeCode} not found`);
+      return null;
     }
 
     return await this.prisma.attendance_records.findFirst({
@@ -40,7 +41,8 @@ export class AttendanceRecordHandler {
   ): Promise<void> {
     const employee = await this.getEmployee(employeeCode);
     if (!employee) {
-      throw new Error(`Employee with ID ${employeeCode} not found`);
+      console.log(`Employee with ID ${employeeCode} not found`);
+      return;
     }
 
     const checkInDate = this.toDate(timeOnly);
@@ -55,6 +57,7 @@ export class AttendanceRecordHandler {
         status: isLate ? attendance_status.late : attendance_status.present,
       },
     });
+    console.log(`CheckIn time inserted for employee ${employeeCode}`);
   }
 
   async updateCheckoutTime(
@@ -79,6 +82,7 @@ export class AttendanceRecordHandler {
           : existingRecord?.status,
       },
     });
+    console.log(`CheckOut time updated for employee ${recordId}`);
   }
 
   async updateCheckinTime(
@@ -101,5 +105,6 @@ export class AttendanceRecordHandler {
         status: isLate ? attendance_status.late : existingRecord?.status,
       },
     });
+    console.log(`CheckIn time updated for employee ${recordId}`);
   }
 }

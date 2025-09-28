@@ -26,7 +26,6 @@ export class AttendanceDataParser {
         });
       }
     }
-
     return attendanceRecords;
   }
 }

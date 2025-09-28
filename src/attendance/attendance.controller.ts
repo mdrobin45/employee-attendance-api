@@ -1,13 +1,24 @@
 import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
 import { AttendanceService } from './attendance.service';
 
-@Controller('attendance')
+@Controller('iclock')
 export class AttendanceController {
   constructor(private readonly attendanceService: AttendanceService) {}
 
-  @Post()
+  @Post('cdata')
   create(@Body() payload: string) {
     return this.attendanceService.create(payload);
+  }
+  @Get('cdata')
+  initialHandshake() {
+    console.log('ZKTeco Connected');
+    return 'OK';
+  }
+
+  @Get('getrequest')
+  getRequest() {
+    console.log('Device pinging...');
+    return 'OK';
   }
 
   @Get('records')
