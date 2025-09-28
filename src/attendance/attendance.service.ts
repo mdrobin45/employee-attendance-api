@@ -27,10 +27,24 @@ export class AttendanceService {
     return this.attendanceProcessor.processAttendance(attendanceData);
   }
 
-  async getDailyAttendance(date: string) {
+  async getDailyAttendance() {
+    const today = new Date(new Date().setDate(new Date().getDate()));
     return await this.prisma.attendance_records.findMany({
       where: {
-        date: date,
+        date: today.toISOString().split('T')[0],
+      },
+      include: {
+        employee: {
+          select: {
+            name: true,
+            employee_code: true,
+            department: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
   }
