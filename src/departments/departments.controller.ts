@@ -13,6 +13,6 @@ export class DepartmentsController {
 
   @Get()
   getAll() {
-    return this.departmentsService.getAll();
+    return this.departmentsService.getDepartmentList();
   }
 }

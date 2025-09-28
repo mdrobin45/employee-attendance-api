@@ -11,6 +11,11 @@ export class DepartmentsService {
       data: departmentData,
     });
   }
+  async getDepartmentList() {
+    return await this.prisma.departments.findMany({
+      select: { id: true, name: true },
+    });
+  }
 
   async getAll() {
     return await this.prisma.departments.findMany();

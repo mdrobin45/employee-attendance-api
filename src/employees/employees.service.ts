@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 
@@ -7,9 +7,16 @@ export class EmployeesService {
   constructor(readonly prisma: PrismaService) {}
 
   async create(employeeData: CreateEmployeeDto) {
-    return await this.prisma.employees.create({
+    const employee = await this.prisma.employees.create({
       data: employeeData,
     });
+    if (!employee) {
+      throw new BadRequestException('Failed to create employee');
+    }
+    return {
+      message: 'Employee created',
+      status: 'success',
+    };
   }
 
   async getAll() {
