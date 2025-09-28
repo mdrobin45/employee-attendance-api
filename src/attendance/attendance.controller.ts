@@ -22,8 +22,12 @@ export class AttendanceController {
   }
 
   @Get('records')
-  getDailyRecords() {
-    return this.attendanceService.getDailyAttendance();
+  getRecords(
+    @Query('employee_id') employee_id: string,
+    @Query('from') from: string,
+    @Query('to') to: string,
+  ) {
+    return this.attendanceService.getRecords(employee_id, from, to);
   }
 
   @Get('records/:employee_id')

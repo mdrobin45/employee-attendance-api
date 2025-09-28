@@ -27,11 +27,14 @@ export class AttendanceService {
     return this.attendanceProcessor.processAttendance(attendanceData);
   }
 
-  async getDailyAttendance() {
-    const today = new Date(new Date().setDate(new Date().getDate()));
+  async getRecords(employee_id?: string, from?: string, to?: string) {
     return await this.prisma.attendance_records.findMany({
       where: {
-        date: today.toISOString().split('T')[0],
+        employee_id: employee_id,
+        date: {
+          gte: from,
+          lte: to,
+        },
       },
       include: {
         employee: {
@@ -58,6 +61,19 @@ export class AttendanceService {
           lte: to,
         },
       },
+      include: {
+        employee: {
+          select: {
+            name: true,
+            employee_code: true,
+            department: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 
@@ -67,6 +83,19 @@ export class AttendanceService {
         date: date,
         status: attendance_status.absent,
       },
+      include: {
+        employee: {
+          select: {
+            name: true,
+            employee_code: true,
+            department: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
+      },
     });
   }
 
@@ -75,6 +104,19 @@ export class AttendanceService {
       where: {
         date: date,
         status: attendance_status.late,
+      },
+      include: {
+        employee: {
+          select: {
+            name: true,
+            employee_code: true,
+            department: {
+              select: {
+                name: true,
+              },
+            },
+          },
+        },
       },
     });
   }
