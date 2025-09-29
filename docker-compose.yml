@@ -34,7 +34,7 @@ services:
       context: .
       dockerfile: Dockerfile
     ports:
-      - "3001:3000"
+      - "4370:3000"
     environment:
       - NODE_ENV=production
       - DATABASE_URL=${DATABASE_URL}

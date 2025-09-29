@@ -34,6 +34,6 @@ COPY --from=build /usr/src/app/prisma ./prisma
 RUN chown -R nestjs:nodejs /usr/src/app
 USER nestjs
 
-EXPOSE 3001
+EXPOSE 4370
 CMD ["node", "dist/src/main"]
    

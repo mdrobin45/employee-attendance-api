@@ -125,13 +125,13 @@ jobs:
                   fi
                   
                   # Try health check
-                  if curl -f http://localhost:3001 > /dev/null 2>&1; then
+                  if curl -f http://localhost:4370 > /dev/null 2>&1; then
                     echo "✅ Health check passed!"
                     break
                   else
                     echo "❌ Health check failed, attempt $attempt/$max_attempts"
                     echo "Trying to get more info..."
-                    curl -v http://localhost:3001 || echo "Curl failed"
+                    curl -v http://localhost:4370 || echo "Curl failed"
                     netstat -tlnp | grep 3000 || echo "Port 3000 not listening"
                     
                     if [ $attempt -eq $max_attempts ]; then
