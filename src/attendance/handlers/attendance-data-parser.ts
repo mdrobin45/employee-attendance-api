@@ -18,7 +18,7 @@ export class AttendanceDataParser {
 
       if (line.startsWith('USER')) continue;
 
-      if (fields.length >= 10) {
+      if (fields.length <= 11) {
         attendanceRecords.push({
           employeeCode: fields[0],
           timestamp: fields[1],

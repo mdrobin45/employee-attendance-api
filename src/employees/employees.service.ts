@@ -1,4 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  HttpException,
+  HttpStatus,
+  Injectable,
+} from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateEmployeeDto } from './dto/create-employee.dto';
 
@@ -7,10 +12,20 @@ export class EmployeesService {
   constructor(readonly prisma: PrismaService) {}
 
   async create(employeeData: CreateEmployeeDto) {
-    const employee = await this.prisma.employees.create({
+    // Check if exist
+    const employee = await this.prisma.employees.findUnique({
+      where: {
+        employee_code: employeeData?.employee_code,
+      },
+    });
+
+    if (employee)
+      throw new HttpException('Employee already exist', HttpStatus.CONFLICT);
+
+    const newEmployee = await this.prisma.employees.create({
       data: employeeData,
     });
-    if (!employee) {
+    if (!newEmployee) {
       throw new BadRequestException('Failed to create employee');
     }
     return {

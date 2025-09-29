@@ -7,6 +7,7 @@ export class AttendanceController {
 
   @Post('cdata')
   create(@Body() payload: string) {
+    console.log('Raw Data: ', payload);
     return this.attendanceService.create(payload);
   }
   @Get('cdata')
