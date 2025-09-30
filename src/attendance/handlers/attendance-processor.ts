@@ -70,6 +70,7 @@ export class AttendanceProcessor {
   }
 
   async processAttendance(data: string): Promise<string> {
+    console.log('Raw data', data);
     const attendanceRecords = this.dataParser.parseAttendanceData(data);
 
     for (const record of attendanceRecords) {
